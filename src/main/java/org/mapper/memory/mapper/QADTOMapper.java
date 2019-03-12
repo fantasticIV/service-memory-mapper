@@ -12,6 +12,7 @@ public final class QADTOMapper {
         qaEntity.setQuestion(QADTO.getQuestion());
         qaEntity.setAnswer(QADTO.getAnswer());
         qaEntity.setqId(QADTO.getqId());
+        qaEntity.settId(QADTO.gettId());
         return qaEntity;
     }
 

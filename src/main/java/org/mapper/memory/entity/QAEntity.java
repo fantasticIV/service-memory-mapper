@@ -9,7 +9,15 @@ public class QAEntity {
     private Long qId;
     private String question;
     private String answer;
+    private String tId;
 
+    public String gettId() {
+        return tId;
+    }
+
+    public void settId(String tId) {
+        this.tId = tId;
+    }
 
     public Long getqId() {
         return qId;

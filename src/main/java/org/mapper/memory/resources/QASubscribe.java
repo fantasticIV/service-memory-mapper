@@ -2,6 +2,7 @@ package org.mapper.memory.resources;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.json.JSONException;
+import org.mapper.memory.entity.QAEntity;
 import org.mapper.memory.entity.Subscribed;
 import org.mapper.memory.entity.Topics;
 import org.mapper.memory.service.TopicService;
@@ -31,6 +32,13 @@ public class QASubscribe {
         return topicService.createTopic(topics);
 
     }
+
+    @GetMapping("/currentQuestion/{userId}/{qId}")
+    private Mono<QAEntity> getCurrentSubscribedResponse(@PathVariable String qId, @PathVariable String userId) {
+        return topicService.getCurrentSubscribeQA(qId, userId);
+
+    }
+
 
 
 }

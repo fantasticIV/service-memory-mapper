@@ -34,10 +34,6 @@ public class QAService {
     }
 
 
-    private Mono<UserAndQAMapping> fetchMapping(Integer integerRndm) {
-        return mappingRepository.findById(integerRndm.longValue());
-    }
-
     public UserAndQAMapping updateMapping(Long qId) {
         Query query = new Query();
         query.addCriteria(Criteria.where("qId").is(qId));
