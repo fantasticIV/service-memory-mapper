@@ -6,6 +6,7 @@ public final class Utils {
     }
 
     public static Long next(Long qId) {
+
         return qId + 1;
     }
 

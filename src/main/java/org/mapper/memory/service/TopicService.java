@@ -6,10 +6,7 @@ import org.json.JSONObject;
 import org.mapper.memory.entity.QAEntity;
 import org.mapper.memory.entity.Subscribed;
 import org.mapper.memory.entity.Topics;
-import org.mapper.memory.repository.QARepository;
-import org.mapper.memory.repository.SubscribedRepo;
-import org.mapper.memory.repository.TopicRepo;
-import org.mapper.memory.repository.UserRepo;
+import org.mapper.memory.repository.*;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -22,12 +19,19 @@ public class TopicService {
     private TopicRepo topicRepo;
     private SubscribedRepo subscribedRepo;
     private QARepository qaRepository;
+    private QARepoNonReactive qaRepoNonReactive;
+    private SubscribedNonReactiveRepo subscribedNonReactiveRepo;
+    //TODO check for concurrent and transactional scope.
+    private Long currentId;
 
-    public TopicService(UserRepo userRepo, TopicRepo topicRepo, SubscribedRepo subscribedRepo, QARepository qaRepository) {
+    public TopicService(UserRepo userRepo, TopicRepo topicRepo, SubscribedRepo subscribedRepo, QARepository qaRepository, QARepoNonReactive qaRepoNonReactive, SubscribedNonReactiveRepo subscribedNonReactiveRepo) {
         this.userRepo = userRepo;
         this.topicRepo = topicRepo;
         this.subscribedRepo = subscribedRepo;
         this.qaRepository = qaRepository;
+        this.qaRepoNonReactive = qaRepoNonReactive;
+        this.subscribedNonReactiveRepo = subscribedNonReactiveRepo;
+
     }
 
     public Mono<Subscribed> subscribeTopics(String topics, String userId) throws JSONException {
@@ -59,29 +63,42 @@ public class TopicService {
 
     public Mono<QAEntity> getCurrentSubscribeQA(String qId, String userId) {
 
-        return qaRepository.findById(Long.parseLong(qId))
+        return Mono.just(getCurrentQId(Long.parseLong(qId)))
                 .flatMap(t -> checkSubscription(t, userId))
                 .filter(bool -> bool.booleanValue())
-                .flatMap(t -> qaRepository.findById(Long.parseLong(qId)));
-        // .switchIfEmpty(getCurrentSubscribeQA(String.valueOf(Utils.next(Long.parseLong(qId))),userId));
+                .flatMap(t -> qaRepository.findById(currentId))
+                .switchIfEmpty(Mono.empty());
+
 
 
     }
 
-    private Mono<Boolean> checkSubscription(QAEntity qaEntity, String userId) {
+    private Mono<Boolean> checkSubscription(Long qId, String userId) {
         return subscribedRepo.findById(userId)
                 .map(t -> t.getTopics())
-                .filter(t -> this.check(t, qaEntity))
+                .filter(t -> this.check(t, qId))
                 .map(t -> true)
                 .switchIfEmpty(Mono.just(false));
+    }
 
+    private Long getCurrentQId(Long qId) {
+        boolean isExist = qaRepoNonReactive.existsById(qId);
+        if (isExist) {
+            return qId;
+        } else {
+            return getCurrentQId(qId + 1);
+        }
 
     }
 
-    private boolean check(List<Topics> t, QAEntity qaEntity) {
+
+    private boolean check(List<Topics> t, Long qId) {
+        QAEntity qaEntity = qaRepoNonReactive.findById(qId).get();
         for (Topics topics : t) {
-            topics.gettId().equals(qaEntity.gettId());
-            return true;
+            if (topics.gettId().equals(qaEntity.gettId())) {
+                currentId = qId;
+                return true;
+            }
         }
         return false;
 
