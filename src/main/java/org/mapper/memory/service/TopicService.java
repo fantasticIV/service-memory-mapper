@@ -63,7 +63,7 @@ public class TopicService {
     }
 
     public Mono<QAEntity> getCurrentSubscribeQA(String qId, String userId) {
-
+        count = 0;
         return Mono.just(getCurrentQId(Long.parseLong(qId)))
                 .flatMap(t -> checkSubscription(t, userId))
                 .filter(bool -> bool.booleanValue())
@@ -83,11 +83,14 @@ public class TopicService {
     }
 
     private Long getCurrentQId(Long qId) {
-
+        long totalCollection = qaRepoNonReactive.count();
         boolean isExist = qaRepoNonReactive.existsById(qId);
         if (isExist) {
             return qId;
         } else {
+            if (count > totalCollection) {
+                return getCurrentQId(1L);
+            }
             count++;
             return getCurrentQId(qId + 1);
         }
