@@ -23,6 +23,7 @@ public class TopicService {
     private SubscribedNonReactiveRepo subscribedNonReactiveRepo;
     //TODO check for concurrent and transactional scope.
     private Long currentId;
+    private int count;
 
     public TopicService(UserRepo userRepo, TopicRepo topicRepo, SubscribedRepo subscribedRepo, QARepository qaRepository, QARepoNonReactive qaRepoNonReactive, SubscribedNonReactiveRepo subscribedNonReactiveRepo) {
         this.userRepo = userRepo;
@@ -82,12 +83,15 @@ public class TopicService {
     }
 
     private Long getCurrentQId(Long qId) {
+
         boolean isExist = qaRepoNonReactive.existsById(qId);
         if (isExist) {
             return qId;
         } else {
+            count++;
             return getCurrentQId(qId + 1);
         }
+
 
     }
 
